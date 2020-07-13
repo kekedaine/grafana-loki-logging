@@ -3,6 +3,7 @@ docker-compose grafana-loki logging. Easy deploy.
 
 
 ```script
+    cp .env.example .env
     docker-compose up
     docker-compose up -d --force-recreate
 ```
