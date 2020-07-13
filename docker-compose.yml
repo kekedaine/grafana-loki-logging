@@ -1,0 +1,46 @@
+version: "3"
+
+networks:
+  loki-net:
+
+volumes:
+  grafana_data: {}
+
+services:
+  loki:
+    image: grafana/loki:1.5.0
+    container_name: loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki:/etc/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - loki-net
+
+  promtail:
+    image: grafana/promtail:1.5.0
+    container_name: promtail
+    volumes:
+      - /var/log:/var/log
+      - /path/to/logs/nginx/:/var/log/nginx
+      - ./promtail:/etc/promtail
+    # command: -config.file=/etc/promtail/docker-config.yaml
+    command: -config.file=/etc/promtail/loki-promtail-conf.yml
+    networks:
+      - loki-net
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    networks:
+      - loki-net
